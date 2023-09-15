@@ -1,0 +1,57 @@
+WITH GroupedStudents AS (
+    SELECT studentId, chatId
+    FROM studentsChatsMap
+    GROUP BY studentId, chatId
+), ChatCreation AS (
+    SELECT chatId
+    FROM onlineChat
+    WHERE createdAt >= TIMESTAMPADD('DAY', -7, '3961-05-12 15:00:00')
+), AboveMedianStudents AS (
+    SELECT studentId
+    FROM student
+    WHERE avgGrade > (
+        SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY avgGrade) AS medianGrade
+        FROM student
+    )
+), SuspiciousChemistryStudents AS (
+    SELECT DISTINCT r.studentId
+    FROM roomAccessHistory r
+    WHERE r.roomId = (
+        SELECT roomId FROM room WHERE roomName LIKE '%chemistry%'
+    )
+    AND r.exitedAt IS NOT NULL
+    AND r.enteredAt < '3961-05-12 15:00:00'
+        AND EXISTS (
+      SELECT 1
+      FROM schedule s
+      WHERE s.classId = (
+        SELECT classId
+        FROM student
+        WHERE studentId = r.studentId
+      )
+      AND s.day = 'Friday'
+      AND s.hour = 15
+    )
+), TallStudents AS (
+    SELECT studentId
+    FROM student
+    ORDER BY height DESC
+), NametagStudents AS (
+    SELECT studentId
+    FROM student
+    WHERE name LIKE '%M%' AND name LIKE '%W%'
+), RoommateGroups AS (
+    SELECT roomId
+    FROM room
+    GROUP BY roomId
+    HAVING COUNT(*) =3
+)
+SELECT DISTINCT s.name
+FROM GroupedStudents gs
+JOIN ChatCreation cc ON gs.chatId = cc.chatId
+JOIN AboveMedianStudents ams ON gs.studentId = ams.studentId
+JOIN SuspiciousChemistryStudents scs ON gs.studentId = scs.studentId
+JOIN student s ON gs.studentId = s.studentId
+JOIN TallStudents ts ON s.studentId = ts.studentId
+JOIN NametagStudents nts ON s.studentId = nts.studentId
+JOIN RoommateGroups rg ON s.bedroomId = rg.roomId
