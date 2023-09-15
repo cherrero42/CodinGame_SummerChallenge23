@@ -1,0 +1,47 @@
+import java.util.*;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
+class Solution {
+
+    /**
+     * @param mutantScores The score corresponding to each mutant
+     * @param threshold The score threshold above which mutants should be ignored
+     * @return 
+     */
+    public static String bestRemainingMutant(Map<String, Double> mutantScores, int threshold) {
+        String bestMutant = null;
+        double maxScore = Double.NEGATIVE_INFINITY;
+        for (Map.Entry<String, Double> entry : mutantScores.entrySet()) {
+            String mutantName = entry.getKey();
+            double score = entry.getValue();
+            if (score > maxScore && score <= threshold) {
+                maxScore = score;
+                bestMutant = mutantName;
+            }
+        }
+    return bestMutant;
+    }
+
+    /* Ignore and do not change the code below */
+    private static final Gson gson = new Gson();
+
+    /**
+     * Try a solution
+     * @param output 
+     */
+    public static void trySolution(String output) {
+        System.out.println("" + gson.toJson(output));
+    }
+
+    public static void main(String args[]) {
+        try (Scanner in = new Scanner(System.in)) {
+            trySolution(bestRemainingMutant(
+                gson.fromJson(in.nextLine(), new TypeToken<Map<String, Double>>(){}.getType()),
+                gson.fromJson(in.nextLine(), new TypeToken<Integer>(){}.getType())
+            ));
+        }
+    }
+    /* Ignore and do not change the code above */
+}
+
